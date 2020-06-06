@@ -91,6 +91,10 @@ menu:   # 默认只有 home 和 archives：
 social: # 添加 github 链接
   GitHub: https://github.com/yourname || fab fa-github
 ...
+# Schemes
+# scheme: Muse
+scheme: Gemini  # 默认为 Muse 主题 
+...
 favicon:
   small: /images/avatar.jpg
   medium: /images/avatar.jpg
@@ -126,16 +130,39 @@ type: "tags"
 type: "categories"
 ```
 
+### 修改字体
+
+默认的字体显示 headers 不明显（H1,H2,H3 看上去区别不大），首先是 enable (`themes/next/_config.yml`)
+
+```yaml
+  global:
+    external: true
+    family: Lato
+    size: 0.9375   # 默认是 1x16px，改为 15px
+```
+
+然后修改大小(`themes/next/source/css/_variables/base.styl`)
+
+```css
+// Headings font size
+$font-size-headings-step  = .25em //.125em;
+$font-size-headings-base  = ... : 2em //1.625em;
+```
+
 ### 其他
 
-如何修改 `Posted on` 的发表时间 -> 可以修改 md 中的 `date`
+如何修改 `Posted on` （发表时间）? 可以修改 md 中的 `date`
 
-不显示 `Edited on` 修改时间
+如何隐藏 `Edited on` （修改时间）?
 
 ```yaml
   updated_at:
     enable: false
 ```
+
+如何修改 post/draft 模板？`scaffolds/post.md`
+
+如何插入图片？[设置](https://blog.csdn.net/u010996565/article/details/89196612)
 
 # 扩展配置
 
@@ -161,7 +188,11 @@ busuanzi_count:
 
 ### 搜索(Search)
 
-有 bug 没有解决（deploy 后页面老是显示 Searching…)，所以先把 search 关闭了
+需要安装插件
+
+```
+$ npm install hexo-generator-searchdb --save
+```
 
 # Ref
 

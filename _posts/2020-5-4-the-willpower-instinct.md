@@ -1,7 +1,7 @@
 ---
 title: 《自控力》读书笔记
 date: 2020-05-04 15:34:08
-categories: 读书笔记
+categories: 笔记
 tags: 科普
 ---
 
