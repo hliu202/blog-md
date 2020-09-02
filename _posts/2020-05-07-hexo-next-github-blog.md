@@ -1,5 +1,5 @@
 ---
-title: 从 0 开始搭建 Hexo Next主题的Github博客
+title: 从 0 开始搭建 Hexo NexT主题的博客
 date: 2020-05-07 19:03:20
 categories: blog
 tags: hexo
@@ -186,7 +186,7 @@ busuanzi_count:
   enable: true
 ```
 
-### 搜索(Search)
+## 搜索(Search)
 
 需要安装插件
 
@@ -194,8 +194,56 @@ busuanzi_count:
 $ npm install hexo-generator-searchdb --save
 ```
 
+## 数学公式
+
+安装插件
+
+```bash
+npm uninstall hexo-renderer-marked --save
+npm install hexo-renderer-kramed --save
+```
+
+`themes/next/_config.yml` 中启用Mathjax
+
+```yaml
+  mathjax:
+    enable: true
+```
+
+在博客中使用
+
+```yaml
+---
+title: ...
+category: ...
+mathjax: true
+---
+```
+
+关于数学公式：[Markdown语法中输入数学公式（MathJax）及特殊符号](https://www.jianshu.com/p/8363e3815b92)
+
+# Last but not least
+
+[官网 getting-started](https://theme-next.js.org/docs/getting-started/) 设置教程非常友好，图文并茂，强烈建议！
+
+比如[Note](https://theme-next.js.org/docs/tag-plugins/note.html):
+
+{% note success %}
+#### Success Header
+**Welcome** to [Hexo!](https://hexo.io)
+{% endnote %}
+
+[Label](https://theme-next.js.org/docs/tag-plugins/label.html)：
+
+> Lorem {% label @ipsum %} {% label primary@dolor sit %} amet, consectetur {% label success@adipiscing elit, %} sed {% label info@do eiusmod %} tempor incididunt ut labore et dolore magna aliqua. Ut enim *{% label warning @ad %}* minim veniam, quis **{% label danger@nostrud %}** exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+
+其他还有视频，PDF等等
+
 # Ref
 
 [Yaya’s blog](https://yashuning.github.io/tags/hexo/)
 
 [Create Local Search for Your Hexo Blog](https://qiuyiwu.github.io/2019/01/25/Hexo-LocalSearch/)
+
+
+
