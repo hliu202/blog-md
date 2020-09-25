@@ -72,31 +72,45 @@ fib(6) is 8
 
 发现基本可用，除了快捷键有点不方便（F5, F10 和 F11，后面 2 个键盘位置太偏），还有几个小问题：
 
-1. `launch.json` 里的设置 `externalConsole` 要为 true，否则找不到一个终端能让我输入 cin 参数，程序就卡在 19 行 scanf 那里了。
-2. **条件断点(conditional breakpoint)**的支持不好。设置条件断点后（比如在第 11 行设置为`i == 5`），竟然不能立刻生效，需要：1）手动 disable breakpoint，再手动 enable breakpoint；或者 2）重启 debug
-3. 没有 disassembly instruction mode，不能查看汇编代码（这点没有 eclipse 方便）
+1. **标准输入:** `launch.json` 里的设置 `externalConsole` 要为 true，否则找不到一个终端能让我输入 cin 参数，程序就卡在 19 行 scanf 那里了。
+2. **条件断点(conditional breakpoint)**: ~~支持不好。设置条件断点后（比如在第 11 行设置为`i == 5`），竟然不能立刻生效，需要：1）手动 disable breakpoint，再手动 enable breakpoint；或者 2）重启 debug~~ (新版已fix)
+3. **汇编代码:** 没有 disassembly instruction mode，不能查看汇编代码（这点没有 eclipse 方便）
 
-# How to Debug GCC
+# How to Debug GCC in VSCode
 
-重点来了，要满足工作需要，还要能 debug 更复杂的场景，比如怎样 debug 编译器(gcc or llvm)？下面详解通过本地 MacBook 在远程 X86 服务器上用 g++ 编译 fib.c，即`g++ -c -O2 fib.c`的过程。
+为了要满足工作需要，还要能 debug 更复杂的场景，比如怎样 debug 编译器(gcc or llvm)？下面详解通过本地 MacBook 在远程 X86 服务器上用 g++ 编译 fib.c，即`g++ -c -O2 fib.c`的过程。
 
-## 准备工作
+## 编译GCC
 
 在远程 X86 服务器上 build gcc 代码，最好用 O0 （默认的是 O2），config 和 build 步骤如下：
 
-1. 下载第三方 library，到 gcc 源代码目录（比如`cd /home/hliu/toolchain/gcc/`)，`contrib/download_prerequisites`
-2. 配置 gcc：`mkdir ../build; cd ../build; ../gcc/configure --prefix=$PWD/../install_O0 --disable-multilib`
-3. `make BOOT_CFLAGS="-g3 -O0" -j 5`
-4. `make install`
+```bash
+git clone git://gcc.gnu.org/git/gcc.git
 
-然后，启动 MacBook 上的 VSCode，通过 Remote-SSH 插件连上远端 host ip，然后:
+# 下载第三方libraries
+cd gcc
+contrib/download_prerequisites
+
+# 编译，安装
+mkdir ../build
+cd ../build
+../gcc/configure --prefix=`pwd`/../install --disable-multilib
+make -j4 BOOT_CFLAGS="-g3 -O0"  # 用O0来build
+make install
+```
+
+## 配置VSCode
+
+### Remote-SSH
+
+如果是本地编译，可以忽略此步骤。
+
+启动 MacBook 上的 VSCode，通过 Remote-SSH 插件连上远端 host ip，然后:
 
 1. 打开 fib.c 所在文件夹
-2. 右键 -> `Add Folder to Workspace`：将 gcc 代码加入 workspace，因为我们同时需要 fib.c 和 gcc 代码。
+2. 右键 -> `Add Folder to Workspace`：将 gcc 代码加入 workspace（因为我们想在一个 workspace 中同时查看 fib.c 和 gcc 代码）。
 
-下面详解后面的步骤
-
-## 配置 launch.json
+###  Debug launch.json
 
 VSCode -> Run -> Add Configurations ->  (gdb) Launch，有个初始的默认配置如下：
 
@@ -108,7 +122,7 @@ VSCode -> Run -> Add Configurations ->  (gdb) Launch，有个初始的默认配�
         "request": "launch",
         "program": "enter program name, for example ${workspaceFolder}/a.out",
         "args": [],
-        "stopAtEntry": true,
+        "stopAtEntry": false,
         "cwd": "${workspaceFolder}",
         "environment": [],
         "externalConsole": false,
@@ -124,7 +138,7 @@ VSCode -> Run -> Add Configurations ->  (gdb) Launch，有个初始的默认配�
 ]
 ```
 
-参见 [Debugging GCC文档](https://dmalcolm.fedorapeople.org/gcc/newbies-guide/debugging.html)，gcc 只是个 `driver`，真正要调试的是 C/C++ Compiler，即 `cc1` 或者 `cc1plus`。通过 gcc 命令行加 `-v` 获取 Command Line Args 列表
+参见 [Debugging GCC文档](https://dmalcolm.fedorapeople.org/gcc/newbies-guide/debugging.html)，gcc 只是个 `driver`（用来调用预处理器，编译器，链接器等），真正要调试的是 C/C++ Compiler，即 `cc1` 或者 `cc1plus`。通过 gcc 命令行加 `-v` 获取 Command Line Args 列表
 
 ```bash
 ~/toolchain/install_O0/bin/gcc -O2 -c fib.c -v
@@ -138,6 +152,22 @@ VSCode -> Run -> Add Configurations ->  (gdb) Launch，有个初始的默认配�
 "program": "/home/hliu/toolchain/install_O0/bin/../libexec/gcc/x86_64-pc-linux-gnu/10.0.1/cc1",
 "args": ["-quiet", "-v", "-imultiarch", "x86_64-linux-gnu", "-iprefix", "/home/hliu/toolchain/install_O0/bin/../lib/gcc/x86_64-pc-linux-gnu/10.0.1/", "fib.c", "-quiet", "-dumpbase", "fib.c", "-mtune=generic", "-march=x86-64", "-auxbase", "fib", "-O2", "-version", "-o", "/tmp/ccR1kTkZ.s",],
 ```
+
+### stopAtEntry
+
+设置为`true`，表示在main函数中停下
+
+### 环境变量
+
+如何在`launch.json`中设置环境变量
+
+```json
+"environment": [{"name": "LD_LIBRARY_PATH", "value": "123"}],
+```
+
+### cwd
+
+默认为workspace根目录，为了方便，可以设置为**输入输出文件所在的目录**
 
 ## 开始调试
 
@@ -153,7 +183,7 @@ VSCode -> Run -> Add Configurations ->  (gdb) Launch，有个初始的默认配�
 
 > execute debugger commands using "-exec <command>", for example "-exec info registers" will list registers in use (when GDB is the debugger)
 
-而每次都要输入 `-exec  `的话，太麻烦了，所以网上找到的 work around 是添加 shortcut (keybindings.json)：
+而每次都要输入 `-exec  `的话，太麻烦了，所以网上找到的 work around 是添加快捷键 (keybindings.json)：
 
 ```json
 {
@@ -176,7 +206,7 @@ rcx            0x7	7
 rdx            0x2ee1828	49158184
 ```
 
-### gdbinit
+### .gdbinit
 
 调试 cc1 的过程中需要用到一些 help function，比如打印当前 function name：
 
@@ -194,21 +224,17 @@ source <path-to-gcc.gdb>
 
 ### 条件断点
 
-真正头痛的问题来了，见前面 small case，本来条件断点就不能自动触发，每次设置后需要手动 disable enable，而更严重的是发现不能比较 `string` 和 `const char *`了。如果源代码很大，需要定位到相关函数名，几乎必须要用条件断点。
-
-原来（eclipse 或者命令行下用 gdb）比较 `const char *` 是使用 `$_streq`，更多详情见 [gdb convenience functions](https://sourceware.org/gdb/current/onlinedocs/gdb/Convenience-Funs.html#Convenience-Funs)，现在条件断点完全没有设置上，报错了
-
-```bash
-Condition "_$streq(current_function_name(), "fib")" : Problem parsing arguments: break-insert -f -c "_$streq(current_function_name(), "fib")" 
-```
-
-仔细看log，是引号识别问题，所以条件断点改成：
+比较 `const char *` 是使用 `$_streq`，更多详情见 [gdb convenience functions](https://sourceware.org/gdb/current/onlinedocs/gdb/Convenience-Funs.html#Convenience-Funs)
 
 ```
-_$streq(current_function_name(), \"fib\")
+$_streq(current_function_name(), "fib")
 ```
 
-这样就能在编译函数 fib 时停下来了
+这样就能在编译函数 fib 时停下来了，如果要求在某个pass时停下，可以加上更多条件
+
+```
+$_streq(current_function_name(), "fib") && $_streq(pass->name, "xxx")
+```
 
 # 总结
 
@@ -217,5 +243,5 @@ _$streq(current_function_name(), \"fib\")
 1. 标准输入输出，配置文件要用"externalConsole"
 2. 命令行模式每次需要手动输入 `-exec`，可以添加相应的快捷键
 3. 配置文件 `args` 需要用多个引号和逗号分隔，不能用一个引号
-4. 条件断点：设置后不能立即生效，需要手动 disable&enable，或者重启调试
-5. 条件断点：处理字符串的引号时有 bug，需要加(\\)
+4. ~~条件断点：设置后不能立即生效，需要手动 disable&enable，或者重启调试~~
+5. ~~条件断点：处理字符串的引号时有 bug，需要加(\\)~~
