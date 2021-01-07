@@ -245,5 +245,5 @@ mathjax: true
 
 [Create Local Search for Your Hexo Blog](https://qiuyiwu.github.io/2019/01/25/Hexo-LocalSearch/)
 
-
+[hexo 站内文章链接](https://blog.jijian.link/2020-01-08/hexo-anchor-link/)
 
