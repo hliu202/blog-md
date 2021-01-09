@@ -247,3 +247,5 @@ mathjax: true
 
 [hexo 站内文章链接](https://blog.jijian.link/2020-01-08/hexo-anchor-link/)
 
+[插入网易云音乐](https://www.nickyam.com/tech/hexo-add-music-and-movie.html)
+
