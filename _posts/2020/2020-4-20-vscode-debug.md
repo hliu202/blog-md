@@ -1,7 +1,7 @@
 ---
-title: VSCode Remote Debug C/C++ Application (gcc) 实践
+title: VSCode Debug C/C++ Application (gcc) 实践
 date: 2020-04-20 15:34:08
-categories: [tools, C/C++]
+categories: C/C++
 tags: VSCode
 ---
 
@@ -153,9 +153,17 @@ VSCode -> Run -> Add Configurations ->  (gdb) Launch，有个初始的默认配�
 "args": ["-quiet", "-v", "-imultiarch", "x86_64-linux-gnu", "-iprefix", "/home/hliu/toolchain/install_O0/bin/../lib/gcc/x86_64-pc-linux-gnu/10.0.1/", "fib.c", "-quiet", "-dumpbase", "fib.c", "-mtune=generic", "-march=x86-64", "-auxbase", "fib", "-O2", "-version", "-o", "/tmp/ccR1kTkZ.s",],
 ```
 
+### program
+
+要写绝对地址，只填个`a.out`是无法找到的（本以为在cwd里就可以不用写了）。
+
 ### stopAtEntry
 
 设置为`true`，表示在main函数中停下
+
+### externalConsole
+
+可以改为`true`，这样会通过其他terminal输出，比如想分窗口显示debug info和debug输入。
 
 ### 环境变量
 
